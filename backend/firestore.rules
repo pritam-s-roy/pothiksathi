@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for role and authentication verification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        getUserData().role == 'admin'
+      );
+    }
+
+    function isApprovedDriver() {
+      return isAuthenticated() && 
+        getUserData().role == 'driver' &&
+        get(/databases/$(database)/documents/driverProfiles/$(request.auth.uid)).data.approvalStatus == 'approved';
+    }
+
+    // 1. users: Personal profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId
+                    && (!request.resource.data.keys().hasAny(['role']) || request.resource.data.role == 'passenger' || request.resource.data.role == 'driver');
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 2. driverProfiles: Driver vehicle and verification data
+    // Only admins can approve or modify approvalStatus.
+    // Drivers cannot alter ratings, totalTrips, self-approve, or directly modify booking locks.
+    match /driverProfiles/{driverId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.auth.uid == driverId || isAdmin())
+                    && request.resource.data.approvalStatus == 'pending';
+      allow update: if isAdmin() || (
+        isAuthenticated() && request.auth.uid == driverId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'approvalStatus', 'rating', 'totalTrips', 'approvedBy', 'approvedAt',
+          'currentBookingId', 'offeredBookingId'
+        ])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 3. routes: Verified routes in Karimpur (Public read, admin write)
+    match /routes/{routeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 4. routeFares: Administrator-configured tariffs (Public read, admin write)
+    match /routeFares/{routeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 5. busTimetables: Karimpur bus schedules (Public read, admin write)
+    match /busTimetables/{timetableId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 6. systemConfig: System-wide dispatch mode toggle (automatic vs manual)
+    match /systemConfig/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 7. bookings: TOTO ride requests and active trips
+    // - Drivers can ONLY read bookings where they are the assigned driver or actively offered candidate.
+    // - Drivers CANNOT see other drivers' private bookings.
+    // - Fares, routes, assignment, locks, and status transitions are strictly protected from client tampering.
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (
+        resource.data.passengerId == request.auth.uid ||
+        resource.data.driverId == request.auth.uid ||
+        isAdmin()
+      );
+      
+      allow create: if isAuthenticated() &&
+        request.resource.data.passengerId == request.auth.uid &&
+        request.resource.data.status == 'pending_assignment' &&
+        request.resource.data.passengerCount >= 1 &&
+        request.resource.data.passengerCount <= 4 &&
+        request.resource.data.fareSnapshot != null;
+
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        // Passenger can cancel before trip starts without altering protected fields
+        (resource.data.passengerId == request.auth.uid &&
+         resource.data.status in ['pending_assignment', 'driver_assigned'] &&
+         request.resource.data.status == 'cancelled_by_passenger' &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+           'fare', 'fareSnapshot', 'bookingType', 'passengerCount', 'originName', 'destinationName',
+           'passengerId', 'driverId', 'dispatchExpiresAt', 'assignmentType', 'paymentStatus'
+         ])) ||
+        // Assigned driver can advance state along authorized flow without altering protected fields
+        (resource.data.driverId == request.auth.uid &&
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+           'fare', 'fareSnapshot', 'bookingType', 'passengerCount', 'originName', 'destinationName',
+           'passengerId', 'driverId', 'dispatchExpiresAt', 'dispatchOfferedAt', 'assignmentType',
+           'paymentStatus', 'attemptedDriverIds'
+         ]) &&
+         request.resource.data.status in ['driver_accepted', 'driver_rejected', 'driver_arrived', 'in_progress', 'completed'])
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // 8. supportIssues: Dispute and issue tracking
+    match /supportIssues/{issueId} {
+      allow read: if isAuthenticated() && (
+        resource.data.reportedBy == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.reportedBy == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
