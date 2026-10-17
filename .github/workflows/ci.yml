@@ -85,11 +85,13 @@ jobs:
 
       - name: Build Android Debug APK
         working-directory: mobile_app
-        run: flutter build apk --debug -v
+        run: |
+          flutter build apk --debug -v > debug_build.log 2>&1 || { echo "=== GRADLE DEBUG BUILD FAILED (LAST 150 LINES) ==="; tail -n 150 debug_build.log; exit 1; }
 
       - name: Build Android Release APK (ABI Split)
         working-directory: mobile_app
-        run: flutter build apk --release --split-per-abi -v
+        run: |
+          flutter build apk --release --split-per-abi -v > release_build.log 2>&1 || { echo "=== GRADLE RELEASE BUILD FAILED (LAST 150 LINES) ==="; tail -n 150 release_build.log; exit 1; }
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
