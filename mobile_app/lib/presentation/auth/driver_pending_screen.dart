@@ -105,12 +105,22 @@ class DriverPendingScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Refresh Status Button
+                  // Simulate Admin Approval / Refresh Status Button
                   CustomButton(
-                    text: 'Refresh Approval Status',
+                    text: 'Simulate Admin Approval (Test Gate)',
                     isLime: true,
                     isLoading: authService.isLoading,
-                    onPressed: () => authService.checkCurrentUser(),
+                    onPressed: () async {
+                      await authService.simulateAdminApproval(true);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Driver approved! Unlocking Captain Dashboard.'),
+                            backgroundColor: AppColors.brandBlack,
+                          ),
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: 12),
 
