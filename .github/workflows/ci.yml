@@ -68,8 +68,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Verify Flutter Installation
-        run: flutter doctor -v
+      - name: Verify Flutter Installation & Accept Android Licenses
+        run: |
+          flutter doctor -v
+          yes | flutter doctor --android-licenses || true
 
       - name: Generate Clean Android Native Project & Gradle Wrapper
         working-directory: mobile_app
@@ -94,7 +96,8 @@ jobs:
         working-directory: mobile_app
         run: |
           if ! flutter build apk --debug -v > debug_build.log 2>&1; then
-            echo "::error title=Gradle Debug Error::$(tail -n 15 debug_build.log)"
+            ERR_MSG=$(grep -i -E "(Exception:|Error:|FAILURE:)" debug_build.log | head -n 4 | tr '\n' ' ' | cut -c 1-250)
+            echo "::error title=Build Failure Cause::$ERR_MSG"
             echo "=== GRADLE DEBUG BUILD FAILED (LAST 80 LINES) ==="
             tail -n 80 debug_build.log
             exit 1
@@ -104,7 +107,8 @@ jobs:
         working-directory: mobile_app
         run: |
           if ! flutter build apk --release --split-per-abi -v > release_build.log 2>&1; then
-            echo "::error title=Gradle Release Error::$(tail -n 15 release_build.log)"
+            ERR_MSG=$(grep -i -E "(Exception:|Error:|FAILURE:)" release_build.log | head -n 4 | tr '\n' ' ' | cut -c 1-250)
+            echo "::error title=Release Failure Cause::$ERR_MSG"
             echo "=== GRADLE RELEASE BUILD FAILED (LAST 80 LINES) ==="
             tail -n 80 release_build.log
             exit 1
