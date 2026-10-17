@@ -347,7 +347,7 @@ class PassengerTripStatusScreen extends StatelessWidget {
             children: [
               const Text('Fare to Collect (নগদ ভাড়া)', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
               Text(
-                booking.bookingType.name == 'shared'
+                booking.bookingType == BookingType.shared
                     ? 'Shared TOTO (${booking.passengerCount} seat)'
                     : 'Private Reserve',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),

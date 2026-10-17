@@ -357,7 +357,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   ),
                 ),
                 Text(
-                  booking.bookingType.name == 'shared'
+                  booking.bookingType == BookingType.shared
                       ? 'Shared TOTO (${booking.passengerCount} Seat)'
                       : 'Private Reserve Ride',
                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),

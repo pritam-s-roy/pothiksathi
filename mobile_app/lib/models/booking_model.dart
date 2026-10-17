@@ -179,6 +179,8 @@ class BookingModel {
     return DateTime.now().isAfter(dispatchExpiresAt!);
   }
 
+  double get totalFare => fare;
+
   factory BookingModel.fromMap(Map<String, dynamic> map, {String? id}) {
     return BookingModel(
       id: id ?? map['id'] ?? '',
