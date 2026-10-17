@@ -71,6 +71,10 @@ jobs:
       - name: Verify Flutter Installation
         run: flutter doctor -v
 
+      - name: Generate Gradle Wrapper & Android Tooling
+        working-directory: mobile_app
+        run: flutter create . --platforms=android --org=in.pothiksathi
+
       - name: Install Flutter Dependencies
         working-directory: mobile_app
         run: flutter pub get
@@ -92,6 +96,13 @@ jobs:
         working-directory: mobile_app
         run: |
           flutter build apk --release --split-per-abi -v > release_build.log 2>&1 || { echo "=== GRADLE RELEASE BUILD FAILED (LAST 150 LINES) ==="; tail -n 150 release_build.log; exit 1; }
+
+      - name: Upload Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-build-log
+          path: mobile_app/*_build.log
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
