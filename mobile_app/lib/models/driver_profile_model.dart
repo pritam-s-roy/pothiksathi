@@ -53,6 +53,8 @@ class DriverProfileModel {
   final DateTime? approvedAt;
   final DateTime updatedAt;
 
+  bool get isApproved => approvalStatus == DriverApprovalStatus.approved;
+
   const DriverProfileModel({
     required this.driverId,
     required this.vehicleNumber,
