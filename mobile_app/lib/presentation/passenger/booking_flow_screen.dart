@@ -163,10 +163,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           tariffVersion: 'INVALID',
           bookingType: _selectedBookingType,
           passengerCount: _passengerCount,
-          perPassengerRate: 0,
-          calculatedFare: 0,
-          finalTotalFare: 0,
+          perPassengerRate: 0.0,
+          baseVehicleRate: 0.0,
+          minimumFareThreshold: 20.0,
+          finalTotalFare: 0.0,
           isTariffVerified: false,
+          calculatedAt: DateTime.now(),
         ),
       );
     }
