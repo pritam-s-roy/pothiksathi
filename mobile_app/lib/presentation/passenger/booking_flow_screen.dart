@@ -9,7 +9,6 @@ import '../../domain/fare_calculator.dart';
 import '../../models/fare_model.dart';
 import '../../models/route_model.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/status_badge.dart';
 import 'passenger_trip_status_screen.dart';
 
 class BookingFlowScreen extends StatefulWidget {
@@ -34,7 +33,14 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   void initState() {
     super.initState();
     if (widget.initialDestination != null) {
-      _selectedDestination = widget.initialDestination!;
+      // Find matching verified hub
+      for (final hub in KarimpurLocations.verifiedHubs) {
+        final hubName = hub['name'] as String;
+        if (hubName.toLowerCase().contains(widget.initialDestination!.toLowerCase())) {
+          _selectedDestination = hubName;
+          break;
+        }
+      }
     }
     _initKarimpurRoutes();
   }
@@ -158,24 +164,22 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           bookingType: _selectedBookingType,
           passengerCount: _passengerCount,
           perPassengerRate: 0,
-          baseVehicleRate: 0,
-          minimumFareThreshold: 20,
+          calculatedFare: 0,
           finalTotalFare: 0,
           isTariffVerified: false,
-          calculatedAt: DateTime.now(),
         ),
       );
     }
   }
 
-  Future<void> _submitBooking() async {
+  Future<void> _handleBookRide() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final bookingService = Provider.of<BookingService>(context, listen: false);
     final user = authService.currentUser;
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to submit a booking.')),
+        const SnackBar(content: Text('Please log in to book a ride.')),
       );
       return;
     }
@@ -183,7 +187,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     final route = _findMatchingRoute();
     if (route == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selected route has no verified tariff. Please select a verified Karimpur hub.')),
+        const SnackBar(content: Text('Selected route is not currently available for dispatch.')),
       );
       return;
     }
@@ -191,12 +195,11 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     final fareResult = _calculateCurrentFare();
     if (!fareResult.isVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(fareResult.unverifiedReason ?? 'Cannot verify fare.')),
+        SnackBar(content: Text(fareResult.unverifiedReason ?? 'Cannot verify route fare.')),
       );
       return;
     }
 
-    // Idempotency token generation: prevents double booking on rapid taps
     final idempotencyKey = '${user.id}_${route.id}_${DateTime.now().millisecondsSinceEpoch ~/ 5000}';
 
     final booking = await bookingService.createBooking(
@@ -226,334 +229,426 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     final route = _findMatchingRoute();
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Book TOTO (টোটো বুকিং)'),
+        title: const Text('Book Ride (টোটো বুকিং)'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Origin and Destination Selector Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Pickup & Destination (যাত্রা শুরু ও গন্তব্য)',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Origin dropdown
-                    Row(
-                      children: [
-                        const Icon(Icons.radio_button_checked, size: 18, color: AppColors.primary),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedOrigin,
-                            decoration: const InputDecoration(
-                              labelText: 'Pickup Location',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            ),
-                            items: KarimpurLocations.verifiedHubs.map((hub) {
-                              return DropdownMenuItem<String>(
-                                value: hub['name'] as String,
-                                child: Text(hub['name'] as String, style: const TextStyle(fontSize: 13)),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) setState(() => _selectedOrigin = val);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 8.0),
-                      child: SizedBox(
-                        height: 18,
-                        child: VerticalDivider(thickness: 2, color: AppColors.border),
-                      ),
-                    ),
-
-                    // Destination dropdown
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, size: 18, color: Colors.red),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedDestination,
-                            decoration: const InputDecoration(
-                              labelText: 'Drop Location',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            ),
-                            items: KarimpurLocations.verifiedHubs.map((hub) {
-                              return DropdownMenuItem<String>(
-                                value: hub['name'] as String,
-                                child: Text(hub['name'] as String, style: const TextStyle(fontSize: 13)),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) setState(() => _selectedDestination = val);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (route != null) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Icon(Icons.route, size: 14, color: AppColors.textSecondary),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Estimated distance: ${Formatters.formatDistance(route.distanceKm)} (~${route.estimatedMinutes} mins)',
-                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+            // inDrive Route Card (Pickup -> Destination)
+            _buildRouteCard(route),
             const SizedBox(height: 16),
 
-            // 2. Booking Type Toggle (Shared vs Private)
+            // inDrive Ride Type Selector (Shared vs Private)
             const Text(
-              'Select Ride Type (রাইডের ধরন)',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              'Select Ride Type',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.2,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedBookingType = BookingType.shared),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _selectedBookingType == BookingType.shared
-                            ? AppColors.primaryTint
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _selectedBookingType == BookingType.shared
-                              ? AppColors.primary
-                              : AppColors.border,
-                          width: _selectedBookingType == BookingType.shared ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Shared TOTO',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: _selectedBookingType == BookingType.shared
-                                      ? AppColors.primary
-                                      : AppColors.textPrimary,
-                                ),
-                              ),
-                              const StatusBadge(status: '₹10/seat', label: '₹10'),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Pay per seat on designated local routes.',
-                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: _buildRideTypeCard(
+                    title: 'Shared TOTO',
+                    bengali: 'শেয়ার',
+                    priceText: '₹10 / seat',
+                    subtitle: 'Fixed route seat',
+                    type: BookingType.shared,
+                    icon: Icons.electric_rickshaw,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedBookingType = BookingType.private),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _selectedBookingType == BookingType.private
-                            ? AppColors.primaryTint
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _selectedBookingType == BookingType.private
-                              ? AppColors.primary
-                              : AppColors.border,
-                          width: _selectedBookingType == BookingType.private ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Private Reserve',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: _selectedBookingType == BookingType.private
-                                      ? AppColors.primary
-                                      : AppColors.textPrimary,
-                                ),
-                              ),
-                              const StatusBadge(status: 'Min ₹20', label: 'Min ₹20'),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Entire vehicle price. Direct point-to-point drop.',
-                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: _buildRideTypeCard(
+                    title: 'Private Reserve',
+                    bengali: 'রিজার্ভ',
+                    priceText: 'From ₹20',
+                    subtitle: 'Entire 4-seater',
+                    type: BookingType.private,
+                    icon: Icons.local_taxi,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // 3. Passenger Count Selector (Subject to vehicle capacity of 4)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Passengers (যাত্রী সংখ্যা)',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        Text(
-                          _selectedBookingType == BookingType.shared
-                              ? '₹${fareResult.baseRate.toInt()}/passenger × $_passengerCount'
-                              : 'Up to max 4 passengers in vehicle',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          color: _passengerCount > 1 ? AppColors.primary : Colors.grey,
-                          onPressed: _passengerCount > 1
-                              ? () => setState(() => _passengerCount--)
-                              : null,
-                        ),
-                        Text(
-                          '$_passengerCount',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline),
-                          color: _passengerCount < 4 ? AppColors.primary : Colors.grey,
-                          onPressed: _passengerCount < 4
-                              ? () => setState(() => _passengerCount++)
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
+            // Passenger Seat Count Stepper (if shared or multi-passenger)
+            _buildPassengerCountCard(),
+            const SizedBox(height: 16),
 
-            // 4. Fare Estimate & Snapshot Breakdown Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withOpacity(0.4)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // inDrive Fare Breakdown Card
+            _buildFareSummaryCard(fareResult),
+            const SizedBox(height: 24),
+
+            // Find Captain Button (inDrive style full-width button)
+            CustomButton(
+              text: fareResult.isVerified
+                  ? 'Find a Captain • ${Formatters.formatCurrency(fareResult.totalFare)}'
+                  : 'Route Unavailable',
+              isLime: fareResult.isVerified,
+              isLoading: bookingService.isLoading,
+              onPressed: fareResult.isVerified && !bookingService.isLoading
+                  ? _handleBookRide
+                  : null,
+            ),
+            const SizedBox(height: 14),
+
+            const Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Agreed Fare',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                      ),
-                      Text(
-                        Formatters.formatCurrency(fareResult.totalFare),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _selectedBookingType == BookingType.shared
-                            ? 'Shared Fare (₹${fareResult.baseRate.toInt()} × $_passengerCount seat)'
-                            : 'Private Vehicle Reserve Fare',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                      Text(
-                        Formatters.formatCurrency(fareResult.totalFare),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Surge / Traffic Charges', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      Text('₹0 (Never applied)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Payment Mode', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      Text('Cash directly to Driver', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    ],
+                  Icon(Icons.lock_outline, size: 12, color: AppColors.textSecondary),
+                  SizedBox(width: 4),
+                  Text(
+                    'Cash payment to driver • 100% verified tariff',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // 5. Submit Booking Button
-            CustomButton(
-              text: 'Confirm & Request Driver (বুকিং নিশ্চিত করুন)',
-              isLoading: bookingService.isSubmitting,
-              icon: Icons.electric_rickshaw,
-              onPressed: _submitBooking,
+  Widget _buildRouteCard(RouteModel? route) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          // Origin input
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: AppColors.brandLimeDark,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedOrigin,
+                  decoration: const InputDecoration(
+                    labelText: 'Pickup Point (যাত্রা শুরু)',
+                    labelStyle: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: KarimpurLocations.verifiedHubs.map((hub) {
+                    return DropdownMenuItem<String>(
+                      value: hub['name'] as String,
+                      child: Text(
+                        hub['name'] as String,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedOrigin = val);
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          // Connector line
+          Padding(
+            padding: const EdgeInsets.only(left: 4.5),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: 1,
+                height: 16,
+                color: AppColors.border,
+              ),
+            ),
+          ),
+
+          // Destination input
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: AppColors.brandBlack,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedDestination,
+                  decoration: const InputDecoration(
+                    labelText: 'Destination (গন্তব্য)',
+                    labelStyle: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  items: KarimpurLocations.verifiedHubs.map((hub) {
+                    return DropdownMenuItem<String>(
+                      value: hub['name'] as String,
+                      child: Text(
+                        hub['name'] as String,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedDestination = val);
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          if (route != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceSubtle,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.straighten, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: 5),
+                  Text(
+                    '${Formatters.formatDistance(route.distanceKm)} • ~${route.estimatedMinutes} mins drive',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRideTypeCard({
+    required String title,
+    required String bengali,
+    required String priceText,
+    required String subtitle,
+    required BookingType type,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedBookingType == type;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedBookingType = type),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.surface : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.brandBlack : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(
+                  icon,
+                  size: 26,
+                  color: isSelected ? AppColors.brandBlack : AppColors.textSecondary,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.brandLime : AppColors.surfaceSubtle,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    priceText,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? AppColors.brandBlack : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPassengerCountCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Passengers (যাত্রী সংখ্যা)',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              Text(
+                'Max 4 seats per TOTO',
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              _buildStepperButton(
+                icon: Icons.remove,
+                onTap: _passengerCount > 1
+                    ? () => setState(() => _passengerCount--)
+                    : null,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Text(
+                  '$_passengerCount',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                ),
+              ),
+              _buildStepperButton(
+                icon: Icons.add,
+                onTap: _passengerCount < 4
+                    ? () => setState(() => _passengerCount++)
+                    : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepperButton({required IconData icon, required VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: onTap != null ? AppColors.surfaceSubtle : AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: onTap != null ? AppColors.textPrimary : AppColors.textLight,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFareSummaryCard(FareCalculationResult fareResult) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Total Verified Fare',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  Text(
+                    _selectedBookingType == BookingType.shared
+                        ? '$_passengerCount × ₹10.00'
+                        : 'Whole vehicle fare',
+                    style: const TextStyle(fontSize: 11, color: AppColors.textLight),
+                  ),
+                ],
+              ),
+              Text(
+                Formatters.formatCurrency(fareResult.totalFare),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 20),
+          const Row(
+            children: [
+              Icon(Icons.check_circle, size: 14, color: AppColors.statusAccepted),
+              SizedBox(width: 6),
+              Text(
+                'Guaranteed standard fare. Zero surge pricing.',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

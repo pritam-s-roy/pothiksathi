@@ -62,12 +62,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authService = context.watch<AuthService>();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Create Account'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
             child: Form(
@@ -75,220 +76,186 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Role Selector Tabs
                   const Text(
-                    'Select Account Type:',
+                    'I want to register as:',
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
                     ),
                   ),
                   const SizedBox(height: 10),
+
+                  // inDrive Role Selector Cards
                   Row(
                     children: [
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedRole = UserRole.passenger),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _selectedRole == UserRole.passenger
-                                  ? AppColors.primaryTint
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: _selectedRole == UserRole.passenger
-                                    ? AppColors.primary
-                                    : AppColors.border,
-                                width: _selectedRole == UserRole.passenger ? 2 : 1,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.person,
-                                  color: _selectedRole == UserRole.passenger
-                                      ? AppColors.primary
-                                      : AppColors.textSecondary,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Passenger\n(যাত্রী)',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: _selectedRole == UserRole.passenger
-                                        ? AppColors.primary
-                                        : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: _buildRoleCard(
+                          title: 'Passenger',
+                          bengali: 'যাত্রী',
+                          role: UserRole.passenger,
+                          icon: Icons.person_outline,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedRole = UserRole.driver),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _selectedRole == UserRole.driver
-                                  ? AppColors.primaryTint
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: _selectedRole == UserRole.driver
-                                    ? AppColors.primary
-                                    : AppColors.border,
-                                width: _selectedRole == UserRole.driver ? 2 : 1,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.electric_rickshaw,
-                                  color: _selectedRole == UserRole.driver
-                                      ? AppColors.primary
-                                      : AppColors.textSecondary,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'TOTO Driver\n(চালক সাথী)',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: _selectedRole == UserRole.driver
-                                        ? AppColors.primary
-                                        : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: _buildRoleCard(
+                          title: 'Captain / Driver',
+                          bengali: 'চালক',
+                          role: UserRole.driver,
+                          icon: Icons.electric_rickshaw,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Full Name
-                  const Text('Full Name *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  const Text('Full Name (পুরো নাম)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. Subir Karmakar',
-                      prefixIcon: Icon(Icons.badge, color: AppColors.primary),
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter your name' : null,
+                    decoration: const InputDecoration(hintText: 'e.g. Sourav Mondal'),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your name' : null,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
 
-                  // Mobile Number
-                  const Text('Phone Number *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  // Phone Number
+                  const Text('Phone Number (ফোন নম্বর)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      hintText: '10-digit mobile number',
-                      prefixIcon: Icon(Icons.phone, color: AppColors.primary),
-                    ),
-                    validator: (v) => (v == null || v.trim().length < 10) ? 'Enter valid 10-digit number' : null,
+                    decoration: const InputDecoration(hintText: 'e.g. 9876543210'),
+                    validator: (v) => v == null || v.trim().length < 10 ? 'Enter valid 10-digit number' : null,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
 
-                  // Email (Optional)
-                  const Text('Email Address (Optional)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  // Optional Email
+                  const Text('Email Address (Optional)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      hintText: 'Optional email for receipts',
-                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
-                    ),
+                    decoration: const InputDecoration(hintText: 'e.g. name@example.com'),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
 
-                  // Driver-Specific Fields
+                  // Driver-specific fields
                   if (_selectedRole == UserRole.driver) ...[
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFFE082)),
+                        color: AppColors.surfaceSubtle,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
                       ),
-                      child: const Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline, color: Color(0xFFE65100), size: 20),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Driver Security: Your account requires administrator approval in Karimpur before taking passenger bookings.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFFE65100),
-                                fontWeight: FontWeight.w500,
-                              ),
+                          const Text(
+                            'TOTO Vehicle Verification',
+                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Admin approval is strictly required before receiving automatic dispatch orders.',
+                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text('Vehicle Number', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _vehicleNumberController,
+                            decoration: const InputDecoration(
+                              hintText: 'e.g. WB-52-TOTO-1234',
+                              fillColor: Colors.white,
                             ),
+                            validator: (v) => _selectedRole == UserRole.driver && (v == null || v.trim().isEmpty)
+                                ? 'Vehicle number is required'
+                                : null,
+                          ),
+                          const SizedBox(height: 14),
+                          const Text('Municipal Badge or ID', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 6),
+                          TextFormField(
+                            controller: _licenseOrIdController,
+                            decoration: const InputDecoration(
+                              hintText: 'e.g. KRM-TOTO-789',
+                              fillColor: Colors.white,
+                            ),
+                            validator: (v) => _selectedRole == UserRole.driver && (v == null || v.trim().isEmpty)
+                                ? 'Driver registration ID is required'
+                                : null,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
-
-                    const Text('TOTO Vehicle Number / Registration *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _vehicleNumberController,
-                      decoration: const InputDecoration(
-                        hintText: 'e.g. WB-52-TOTO-1042 or Municipal Reg No',
-                        prefixIcon: Icon(Icons.directions_car, color: AppColors.primary),
-                      ),
-                      validator: (v) {
-                        if (_selectedRole == UserRole.driver && (v == null || v.trim().isEmpty)) {
-                          return 'Vehicle number is required for drivers';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    const Text('Aadhaar / Voter ID Number *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 6),
-                    TextFormField(
-                      controller: _licenseOrIdController,
-                      decoration: const InputDecoration(
-                        hintText: 'Identity verification document number',
-                        prefixIcon: Icon(Icons.credit_card, color: AppColors.primary),
-                      ),
-                      validator: (v) {
-                        if (_selectedRole == UserRole.driver && (v == null || v.trim().isEmpty)) {
-                          return 'ID proof is required for driver verification';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
                   ],
 
-                  const SizedBox(height: 12),
+                  // Register Button
                   CustomButton(
-                    text: _selectedRole == UserRole.driver ? 'Register as TOTO Driver' : 'Register as Passenger',
+                    text: 'Complete Registration',
+                    isLime: true,
                     isLoading: authService.isLoading,
                     onPressed: _handleRegister,
                   ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleCard({
+    required String title,
+    required String bengali,
+    required UserRole role,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedRole == role;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.brandBlack : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.brandBlack : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 26,
+              color: isSelected ? AppColors.brandLime : AppColors.textSecondary,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+            Text(
+              '($bengali)',
+              style: TextStyle(
+                fontSize: 11,
+                color: isSelected ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );

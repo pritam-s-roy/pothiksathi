@@ -1,35 +1,44 @@
 import 'package:flutter/material.dart';
 
-/// Clean, high-contrast, green-and-white color palette optimized for 
-/// outdoor readability in bright daylight and low visual clutter.
+/// Minimalist inDrive-inspired color palette for PothikSathi:
+/// High-contrast obsidian blacks, electric lime accents, crisp whites,
+/// and soft graphite neutrals for outdoor daylight clarity.
 class AppColors {
-  // Primary Greens
-  static const Color primary = Color(0xFF1B5E20);       // Deep Bengal Forest Green
-  static const Color primaryLight = Color(0xFF2E7D32);  // Rich Emerald Green
-  static const Color primaryTint = Color(0xFFE8F5E9);   // Light Mint Background Tint
-  static const Color accent = Color(0xFF43A047);        // Vivid Green Accent
+  // inDrive Signature Accents
+  static const Color brandLime = Color(0xFFB8EE00);        // Iconic inDrive Electric Lime
+  static const Color brandLimeDark = Color(0xFF96C900);    // Deep Chartreuse
+  static const Color brandLimeTint = Color(0xFFF3FCD0);    // Soft Lime Card Tint
+  static const Color brandBlack = Color(0xFF121212);       // Deep Obsidian / Jet Black
+  static const Color brandCharcoal = Color(0xFF1E1E22);    // Elevated Surface Charcoal
 
-  // Clean Neutrals
-  static const Color background = Color(0xFFF8FAF8);    // Crisp Off-White
-  static const Color surface = Color(0xFFFFFFFF);       // Pure White Card Surface
-  static const Color textPrimary = Color(0xFF1E261E);   // High-contrast near-black
-  static const Color textSecondary = Color(0xFF5E6D5E); // Subtle graphite grey
-  static const Color textLight = Color(0xFF8D9A8D);     // Secondary placeholder
-  static const Color border = Color(0xFFE0E7E0);        // Soft structural border
-  static const Color divider = Color(0xFFEEF2EE);       // Hairline divider
+  // Primary Theme Aliases (Mapped to inDrive aesthetic)
+  static const Color primary = Color(0xFF121212);          // Modern high-contrast dark primary
+  static const Color primaryLight = Color(0xFF2A2A2E);     // Dark charcoal secondary
+  static const Color primaryTint = Color(0xFFF2FCDA);      // Subtle lime-green background tint
+  static const Color accent = Color(0xFFB8EE00);           // High-energy inDrive Lime
+
+  // Clean Minimalist Neutrals
+  static const Color background = Color(0xFFF7F8FA);       // Crisp off-white canvas
+  static const Color surface = Color(0xFFFFFFFF);          // Pure white card surface
+  static const Color surfaceSubtle = Color(0xFFF2F4F7);    // Soft grey input & pill surface
+  static const Color textPrimary = Color(0xFF111827);      // Deep obsidian near-black
+  static const Color textSecondary = Color(0xFF6B7280);    // Muted slate graphite
+  static const Color textLight = Color(0xFF9CA3AF);        // Subtle placeholder grey
+  static const Color border = Color(0xFFE5E7EB);           // Hairline modern border
+  static const Color divider = Color(0xFFF3F4F6);          // Soft separator line
 
   // Operational State Badges
-  static const Color statusPending = Color(0xFFEF6C00);   // Amber Orange
-  static const Color statusAssigned = Color(0xFF0277BD);  // Informational Sky Blue
-  static const Color statusAccepted = Color(0xFF2E7D32);  // Confirmed Green
-  static const Color statusArrived = Color(0xFF558B2F);   // Ready Lime Green
-  static const Color statusActive = Color(0xFF00695C);    // On-Trip Teal
-  static const Color statusCompleted = Color(0xFF2E7D32); // Success Green
-  static const Color statusCancelled = Color(0xFFC62828); // Error Red
+  static const Color statusPending = Color(0xFFF59E0B);    // Warm Amber
+  static const Color statusAssigned = Color(0xFF2563EB);   // Electric Blue
+  static const Color statusAccepted = Color(0xFF10B981);   // Confirmed Emerald Green
+  static const Color statusArrived = Color(0xFF059669);    // Ready Pine Green
+  static const Color statusActive = Color(0xFF121212);     // On-Trip Obsidian
+  static const Color statusCompleted = Color(0xFF10B981);  // Success Emerald Green
+  static const Color statusCancelled = Color(0xFFEF4444);  // Clean Warning Red
 
   // Service Badges
-  static const Color totoBadgeBg = Color(0xFFE8F5E9);
-  static const Color totoBadgeText = Color(0xFF1B5E20);
-  static const Color busBadgeBg = Color(0xFFE3F2FD);
-  static const Color busBadgeText = Color(0xFF0D47A1);
+  static const Color totoBadgeBg = Color(0xFFF2FCDA);
+  static const Color totoBadgeText = Color(0xFF121212);
+  static const Color busBadgeBg = Color(0xFFEFF6FF);
+  static const Color busBadgeText = Color(0xFF1D4ED8);
 }

@@ -6,9 +6,12 @@ class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool isOutlined;
+  final bool isLime;
   final IconData? icon;
   final Color? backgroundColor;
   final Color? textColor;
+  final double height;
+  final double borderRadius;
 
   const CustomButton({
     super.key,
@@ -16,42 +19,54 @@ class CustomButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.isOutlined = false,
+    this.isLime = false,
     this.icon,
     this.backgroundColor,
     this.textColor,
+    this.height = 52.0,
+    this.borderRadius = 26.0,
   });
 
   @override
   Widget build(BuildContext context) {
     if (isOutlined) {
-      return OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(
-            color: backgroundColor ?? AppColors.primary,
-            width: 1.5,
+      return SizedBox(
+        height: height,
+        child: OutlinedButton(
+          onPressed: isLoading ? null : onPressed,
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(
+              color: backgroundColor ?? AppColors.border,
+              width: 1.5,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(borderRadius),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          child: _buildChild(context, textColor ?? AppColors.textPrimary),
         ),
-        child: _buildChild(context, textColor ?? AppColors.primary),
       );
     }
 
-    return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? AppColors.primary,
-        foregroundColor: textColor ?? Colors.white,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+    final Color resolvedBg = backgroundColor ?? (isLime ? AppColors.brandLime : AppColors.brandBlack);
+    final Color resolvedText = textColor ?? (isLime ? AppColors.brandBlack : Colors.white);
+
+    return SizedBox(
+      height: height,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: resolvedBg,
+          foregroundColor: resolvedText,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
+        child: _buildChild(context, resolvedText),
       ),
-      child: _buildChild(context, textColor ?? Colors.white),
     );
   }
 
@@ -78,8 +93,9 @@ class CustomButton extends StatelessWidget {
             text,
             style: TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: color,
+              letterSpacing: -0.2,
             ),
           ),
         ],
@@ -90,8 +106,9 @@ class CustomButton extends StatelessWidget {
       text,
       style: TextStyle(
         fontSize: 15,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: color,
+        letterSpacing: -0.2,
       ),
     );
   }

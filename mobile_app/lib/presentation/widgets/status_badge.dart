@@ -27,20 +27,21 @@ class StatusBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 7,
-            height: 7,
+            width: 6,
+            height: 6,
             decoration: BoxDecoration(
               color: config.textColor,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           Text(
             text,
             style: TextStyle(
               color: config.textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.1,
             ),
           ),
         ],
@@ -55,47 +56,47 @@ class StatusBadge extends StatelessWidget {
         return _BadgeConfig(
           label: 'Finding Driver',
           textColor: AppColors.statusPending,
-          backgroundColor: const Color(0xFFFFF3E0),
-          borderColor: const Color(0xFFFFCC80),
+          backgroundColor: const Color(0xFFFEF3C7),
+          borderColor: const Color(0xFFFDE68A),
         );
       case 'driver_assigned':
       case 'assigned':
         return _BadgeConfig(
           label: 'Driver Assigned',
           textColor: AppColors.statusAssigned,
-          backgroundColor: const Color(0xFFE1F5FE),
-          borderColor: const Color(0xFF81D4FA),
+          backgroundColor: const Color(0xFFDBEAFE),
+          borderColor: const Color(0xFFBFDBFE),
         );
       case 'driver_accepted':
       case 'accepted':
         return _BadgeConfig(
           label: 'Accepted / On Way',
           textColor: AppColors.statusAccepted,
-          backgroundColor: const Color(0xFFE8F5E9),
-          borderColor: const Color(0xFFA5D6A7),
+          backgroundColor: const Color(0xFFD1FAE5),
+          borderColor: const Color(0xFFA7F3D0),
         );
       case 'driver_arrived':
       case 'arrived':
         return _BadgeConfig(
           label: 'Driver Arrived',
           textColor: AppColors.statusArrived,
-          backgroundColor: const Color(0xFFF1F8E9),
-          borderColor: const Color(0xFFC5E1A5),
+          backgroundColor: const Color(0xFFECFDF5),
+          borderColor: const Color(0xFFA7F3D0),
         );
       case 'in_progress':
       case 'picked_up':
         return _BadgeConfig(
           label: 'Trip In Progress',
-          textColor: AppColors.statusActive,
-          backgroundColor: const Color(0xFFE0F2F1),
-          borderColor: const Color(0xFF80CBC4),
+          textColor: AppColors.textPrimary,
+          backgroundColor: AppColors.surfaceSubtle,
+          borderColor: AppColors.border,
         );
       case 'completed':
         return _BadgeConfig(
           label: 'Completed',
           textColor: AppColors.statusCompleted,
-          backgroundColor: const Color(0xFFE8F5E9),
-          borderColor: const Color(0xFFA5D6A7),
+          backgroundColor: const Color(0xFFD1FAE5),
+          borderColor: const Color(0xFFA7F3D0),
         );
       case 'cancelled':
       case 'cancelled_by_passenger':
@@ -105,36 +106,36 @@ class StatusBadge extends StatelessWidget {
         return _BadgeConfig(
           label: 'Cancelled',
           textColor: AppColors.statusCancelled,
-          backgroundColor: const Color(0xFFFFEBEE),
-          borderColor: const Color(0xFFEF9A9A),
+          backgroundColor: const Color(0xFFFEE2E2),
+          borderColor: const Color(0xFFFECACA),
         );
       case 'approved':
         return _BadgeConfig(
           label: 'Approved',
           textColor: AppColors.statusCompleted,
-          backgroundColor: const Color(0xFFE8F5E9),
-          borderColor: const Color(0xFFA5D6A7),
+          backgroundColor: const Color(0xFFD1FAE5),
+          borderColor: const Color(0xFFA7F3D0),
         );
       case 'online':
         return _BadgeConfig(
           label: 'Online',
-          textColor: AppColors.primary,
-          backgroundColor: AppColors.primaryTint,
-          borderColor: AppColors.primaryLight,
+          textColor: AppColors.brandBlack,
+          backgroundColor: AppColors.brandLime,
+          borderColor: AppColors.brandLimeDark,
         );
       case 'offline':
         return _BadgeConfig(
           label: 'Offline',
           textColor: AppColors.textSecondary,
-          backgroundColor: const Color(0xFFEEEEEE),
-          borderColor: const Color(0xFFBDBDBD),
+          backgroundColor: AppColors.surfaceSubtle,
+          borderColor: AppColors.border,
         );
       default:
         return _BadgeConfig(
           label: rawStatus,
-          textColor: AppColors.textSecondary,
-          backgroundColor: const Color(0xFFF5F5F5),
-          borderColor: const Color(0xFFE0E0E0),
+          textColor: AppColors.textPrimary,
+          backgroundColor: AppColors.surfaceSubtle,
+          borderColor: AppColors.border,
         );
     }
   }

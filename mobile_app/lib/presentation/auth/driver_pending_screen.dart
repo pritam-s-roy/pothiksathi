@@ -15,11 +15,12 @@ class DriverPendingScreen extends StatelessWidget {
     final user = authService.currentUser;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Driver Verification Status'),
+        title: const Text('Driver Verification'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, size: 20),
             tooltip: 'Sign Out',
             onPressed: () => authService.signOut(),
           ),
@@ -35,128 +36,92 @@ class DriverPendingScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
+                      color: AppColors.surfaceSubtle,
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFFFB74D), width: 2),
                     ),
                     child: const Icon(
-                      Icons.hourglass_empty_rounded,
-                      size: 42,
-                      color: Color(0xFFE65100),
+                      Icons.hourglass_top_rounded,
+                      size: 34,
+                      color: AppColors.brandBlack,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   const Text(
                     'Application Under Review',
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.brandBlack,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   const Text(
                     'চালক অনুমোদন প্রক্রিয়াধীন রয়েছে',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Detail Card
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Verification Status',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              StatusBadge(
-                                status: driver?.approvalStatus.toDbString() ?? 'pending',
-                              ),
-                            ],
-                          ),
-                          const Divider(height: 24),
-                          _buildDetailRow('Driver Name', user?.name ?? 'Unknown'),
-                          _buildDetailRow('Phone Number', user?.phoneNumber ?? '-'),
-                          _buildDetailRow('Vehicle Number', driver?.vehicleNumber ?? 'Pending Submission'),
-                          _buildDetailRow('ID Proof', driver?.licenseOrId ?? 'Aadhaar / Voter ID'),
-                          _buildDetailRow('Service Town', 'Karimpur, Nadia (741152)'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Security notice box
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFA5D6A7)),
+                      color: AppColors.surfaceSubtle,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.border),
                     ),
-                    child: const Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.shield_outlined, color: AppColors.primary, size: 22),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'To protect passengers and ensure fair fare standards, our local Karimpur administrator verifies your vehicle registration before granting active ride dispatch access.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.primary,
-                              height: 1.4,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Verification Status',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
+                            StatusBadge(
+                              status: driver?.approvalStatus.toDbString() ?? 'pending',
+                            ),
+                          ],
                         ),
+                        const Divider(height: 24),
+                        _buildDetailRow('Captain Name', user?.name ?? 'Unknown'),
+                        _buildDetailRow('Phone Number', user?.phoneNumber ?? '-'),
+                        _buildDetailRow('Vehicle Number', driver?.vehicleNumber ?? 'Pending Submission'),
+                        _buildDetailRow('Service Hub', 'Karimpur, Nadia (741152)'),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // Developer / Demonstration convenience button
+                  // Refresh Status Button
                   CustomButton(
-                    text: 'Simulate Admin Approval (Test Gate)',
-                    isOutlined: true,
-                    icon: Icons.check_circle_outline,
-                    onPressed: () async {
-                      await authService.simulateAdminApproval(true);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Driver approved! Unlocking Captain Dashboard.'),
-                            backgroundColor: AppColors.primary,
-                          ),
-                        );
-                      }
-                    },
+                    text: 'Refresh Approval Status',
+                    isLime: true,
+                    isLoading: authService.isLoading,
+                    onPressed: () => authService.checkCurrentUser(),
                   ),
                   const SizedBox(height: 12),
 
-                  TextButton.icon(
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Check Status Again'),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Checking latest verification records...')),
-                      );
-                    },
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    ),
+                    onPressed: () => authService.signOut(),
+                    child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ],
               ),
@@ -173,8 +138,8 @@ class DriverPendingScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
         ],
       ),
     );

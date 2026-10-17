@@ -17,8 +17,8 @@ class DriverHomeScreen extends StatefulWidget {
 }
 
 class _DriverHomeScreenState extends State<DriverHomeScreen> {
-  int _completedToday = 5;
-  double _todayEarnings = 260.0;
+  final int _completedToday = 5;
+  final double _todayEarnings = 260.0;
 
   @override
   Widget build(BuildContext context) {
@@ -34,251 +34,256 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
          (liveBooking.status == BookingStatus.driverAssigned && liveBooking.driverId == driver?.driverId));
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Captain Dashboard (চালক)',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              'Captain Dashboard',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, letterSpacing: -0.3),
             ),
             Text(
-              '${driver?.vehicleNumber ?? 'TOTO'} • Karimpur Zone',
-              style: const TextStyle(fontSize: 11, color: Colors.white70),
+              '${driver?.vehicleNumber ?? "TOTO"} • Karimpur Zone',
+              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, size: 20, color: AppColors.textSecondary),
             tooltip: 'Sign Out',
             onPressed: () => authService.signOut(),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Availability Status Banner Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isOnline ? AppColors.accent : Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isOnline ? 'ONLINE (সক্রিয়)' : 'OFFLINE (নিষ্ক্রিয়)',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: isOnline ? AppColors.primary : AppColors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              isOnline
-                                  ? 'Automatic Dispatch matching active'
-                                  : 'Turn online to receive booking offers',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Switch(
-                      value: isOnline,
-                      activeColor: AppColors.primary,
-                      onChanged: (val) {
-                        authService.toggleDriverOnline(val);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // Online / Offline Status Toggle Card (inDrive style)
+            _buildStatusToggleCard(isOnline, authService),
+            const SizedBox(height: 14),
+
+            // Performance & Today's Earnings Summary
+            _buildEarningsRow(),
             const SizedBox(height: 16),
 
-            // 2. Today's Performance & Earnings Summary
-            Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Today's Trips",
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$_completedToday',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const Text(
-                            'Completed',
-                            style: TextStyle(fontSize: 10, color: AppColors.textLight),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Today's Fare",
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            Formatters.formatCurrency(_todayEarnings),
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2E7D32),
-                            ),
-                          ),
-                          const Text(
-                            'Cash Collected',
-                            style: TextStyle(fontSize: 10, color: AppColors.textLight),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // 3. Active Assignment Section
-            const Text(
-              'Trip Assignment Status',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-
+            // Main Content Area: Offline State / Active Radar / Live Trip Offer
             if (!isOnline)
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Column(
-                  children: [
-                    Icon(Icons.power_settings_new, size: 36, color: AppColors.textLight),
-                    SizedBox(height: 8),
-                    Text(
-                      'You are currently offline',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                    ),
-                    Text(
-                      'Switch online above to receive auto-dispatch ride requests from Karimpur commuters.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: AppColors.textLight),
-                    ),
-                  ],
-                ),
-              )
+              _buildOfflineCard()
             else if (!isMyBooking)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Column(
-                  children: [
-                    Icon(Icons.radar, size: 40, color: AppColors.primaryLight),
-                    SizedBox(height: 10),
-                    Text(
-                      'Auto-Dispatch Radar Active',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Listening for nearby rides in Karimpur. You will receive an incoming alert with a 30-second acceptance countdown.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              )
+              _buildRadarActiveCard()
             else
-              // Live Offered / Active Trip Card
               _buildLiveTripCard(context, liveBooking, driver!, bookingService),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Driver Safety & Audit Notice
+            // Driver Safety & Guidelines Banner
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.gavel_outlined, size: 16, color: AppColors.textSecondary),
+                      Icon(Icons.shield_outlined, size: 16, color: AppColors.brandBlack),
                       SizedBox(width: 6),
                       Text(
-                        'Operating Guidelines & Audit Policy',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        'Karimpur Operating Rules',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
-                    '1. Confirmed fares cannot be altered without admin dispatch authorization.\n2. Always collect exact cash of ${Formatters.formatCurrency(10)} per shared passenger on verified local routes.\n3. Automatic dispatch offers have a 30s response window. Unanswered offers cascade to the next captain.',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, height: 1.4),
+                    '• Collect verified cash fare of ₹10 per shared passenger.\n• 30-second offer acceptance timer. Unaccepted offers cascade automatically.\n• Zero surge pricing enforced on all local routes.',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary, height: 1.4),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusToggleCard(bool isOnline, AuthService authService) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isOnline ? AppColors.brandBlack : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isOnline ? AppColors.brandBlack : AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isOnline ? AppColors.brandLime : AppColors.textLight,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isOnline ? 'ONLINE (সক্রিয়)' : 'OFFLINE (নিষ্ক্রিয়)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                      color: isOnline ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    isOnline ? 'Receiving auto-dispatch rides' : 'Go online to get trip offers',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isOnline ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Switch(
+            value: isOnline,
+            activeColor: AppColors.brandLime,
+            activeTrackColor: const Color(0xFF2E3320),
+            inactiveThumbColor: AppColors.textLight,
+            inactiveTrackColor: AppColors.surfaceSubtle,
+            onChanged: (val) {
+              authService.toggleDriverOnline(val);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEarningsRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Today's Earnings", style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                const SizedBox(height: 4),
+                Text(
+                  Formatters.formatCurrency(_todayEarnings),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Completed Trips", style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                const SizedBox(height: 4),
+                Text(
+                  '$_completedToday',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOfflineCard() {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Column(
+        children: [
+          Icon(Icons.power_settings_new, size: 36, color: AppColors.textLight),
+          SizedBox(height: 10),
+          Text(
+            'You are currently offline',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'Switch online above to begin receiving automatic dispatch offers from Karimpur passengers.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRadarActiveCard() {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: const BoxDecoration(
+              color: AppColors.brandLimeTint,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.radar, size: 32, color: AppColors.brandBlack),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Radar Active • Searching Rides',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, letterSpacing: -0.3),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Listening for nearby rides in Karimpur. New offers will appear with an instant 30-second acceptance timer.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+          ),
+        ],
       ),
     );
   }
@@ -292,278 +297,194 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     final isOfferedState = booking.status == BookingStatus.driverAssigned;
     final remainingSecs = booking.remainingOfferSeconds;
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: isOfferedState ? const Color(0xFFEF6C00) : AppColors.primary,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isOfferedState ? AppColors.brandLimeDark : AppColors.brandBlack,
           width: 2,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Header: Booking ID + Countdown Timer / Status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.confirmation_number_outlined, size: 18, color: AppColors.primary),
-                    const SizedBox(width: 6),
-                    Text(
-                      booking.id,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                  ],
-                ),
-                if (isOfferedState)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFFFB74D)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.timer, size: 14, color: Color(0xFFE65100)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$remainingSecs s remaining',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFE65100),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  StatusBadge(status: booking.status.toDbString()),
-              ],
-            ),
-            const Divider(height: 20),
-
-            // 30s Progress Bar when in offered state
-            if (isOfferedState) ...[
-              LinearProgressIndicator(
-                value: remainingSecs / 30.0,
-                backgroundColor: const Color(0xFFFFE0B2),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE65100)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Top Header: Booking ID + Countdown Timer
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                booking.id,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 14),
+              if (isOfferedState)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandLimeTint,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.timer_outlined, size: 14, color: AppColors.brandBlack),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${remainingSecs}s left',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.brandBlack),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                StatusBadge(status: booking.status.toDbString()),
             ],
+          ),
+          const SizedBox(height: 14),
 
-            // Route Details
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Big inDrive Fare Display
+          Center(
+            child: Column(
               children: [
-                const Column(
-                  children: [
-                    Icon(Icons.radio_button_checked, size: 16, color: AppColors.primary),
-                    SizedBox(height: 20, child: VerticalDivider(thickness: 2, color: AppColors.border)),
-                    Icon(Icons.location_on, size: 16, color: Colors.red),
-                  ],
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'PICKUP: ${booking.originName}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'DROP: ${booking.destinationName}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ],
+                Text(
+                  Formatters.formatCurrency(booking.totalFare),
+                  style: const TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -1,
                   ),
+                ),
+                Text(
+                  booking.bookingType.name == 'shared'
+                      ? 'Shared TOTO (${booking.passengerCount} Seat)'
+                      : 'Private Reserve Ride',
+                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+          ),
+          const SizedBox(height: 16),
 
-            // Passenger & Fare specs
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.primaryTint,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
-                    children: [
-                      const Text('Passenger', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                      Text(
-                        '${booking.passengerCount} person(s)',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  Container(height: 24, width: 1, color: AppColors.border),
-                  Column(
-                    children: [
-                      const Text('Ride Type', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                      Text(
-                        booking.bookingType == BookingType.shared ? 'Shared (₹10/seat)' : 'Private Reserve',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  Container(height: 24, width: 1, color: AppColors.border),
-                  Column(
-                    children: [
-                      const Text('Agreed Fare', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                      Text(
-                        Formatters.formatCurrency(booking.fare),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+          // 30s Countdown Progress Indicator
+          if (isOfferedState) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: (remainingSecs / 30.0).clamp(0.0, 1.0),
+                backgroundColor: AppColors.surfaceSubtle,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.brandLime),
+                minHeight: 6,
               ),
             ),
             const SizedBox(height: 16),
+          ],
 
-            // Action Flow Buttons
-            if (isOfferedState) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        bookingService.rejectDriverOffer(driver.driverId, 'Declined by captain');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Trip declined. Cascading to next candidate captain.'),
-                            backgroundColor: AppColors.statusCancelled,
-                          ),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.statusCancelled,
-                        side: const BorderSide(color: AppColors.statusCancelled),
-                      ),
-                      child: const Text('Decline'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final ok = await bookingService.acceptDriverOffer(driver.driverId);
-                        if (ok && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Trip Accepted! Head towards pickup location.'),
-                              backgroundColor: AppColors.primary,
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                      child: const Text('Accept Trip'),
-                    ),
-                  ),
-                ],
-              ),
-            ] else if (booking.status == BookingStatus.completed) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
+          // Route Details
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSubtle,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    const Icon(Icons.check_circle, color: AppColors.primary, size: 28),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Trip Completed! Collect ${Formatters.formatCurrency(booking.fare)} Cash',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                    Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.brandLimeDark, shape: BoxShape.circle)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'PICKUP: ${booking.originName}',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 3.5),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(width: 1, height: 14, color: AppColors.border),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.brandBlack, shape: BoxShape.circle)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'DROP: ${booking.destinationName}',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Action Buttons:
+          // In Offered state: Decline (Grey) / Accept (Lime)
+          if (isOfferedState)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    ),
+                    onPressed: () async {
+                      await bookingService.rejectOffer(booking.id, driver.driverId);
+                    },
+                    child: const Text('Decline', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.brandLime,
+                      foregroundColor: AppColors.brandBlack,
+                      minimumSize: const Size(double.infinity, 50),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    ),
+                    onPressed: () async {
+                      await bookingService.acceptOffer(booking.id, driver.driverId);
+                    },
+                    child: const Text('Accept Offer', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            // In Progress Trip State Stepper Actions
+            if (booking.status == BookingStatus.driverAccepted)
               CustomButton(
-                text: 'Dismiss & Ready for Next Assignment',
-                onPressed: () {
-                  setState(() {
-                    _todayEarnings += booking.fare;
-                    _completedToday += 1;
-                  });
-                  bookingService.clearActiveBooking();
-                },
+                text: 'Captain Arrived at Pickup (পৌঁছে গেছি)',
+                isLime: true,
+                onPressed: () => bookingService.markDriverArrived(booking.id),
               ),
-            ] else ...[
+            if (booking.status == BookingStatus.driverArrived)
               CustomButton(
-                text: _getStepActionText(booking.status),
-                icon: _getStepActionIcon(booking.status),
-                onPressed: () {
-                  final nextStatus = _getNextTripStatus(booking.status);
-                  if (nextStatus != null) {
-                    bookingService.advanceDriverStatus(nextStatus);
-                  }
-                },
+                text: 'Start Trip (যাত্রা শুরু করুন)',
+                isLime: true,
+                onPressed: () => bookingService.startTrip(booking.id),
               ),
-            ],
+            if (booking.status == BookingStatus.inProgress)
+              CustomButton(
+                text: 'Complete & Collect ${Formatters.formatCurrency(booking.totalFare)}',
+                isLime: true,
+                onPressed: () => bookingService.completeTrip(booking.id),
+              ),
           ],
-        ),
+        ],
       ),
     );
-  }
-
-  BookingStatus? _getNextTripStatus(BookingStatus current) {
-    switch (current) {
-      case BookingStatus.driverAccepted:
-        return BookingStatus.driverArrived;
-      case BookingStatus.driverArrived:
-        return BookingStatus.inProgress;
-      case BookingStatus.inProgress:
-        return BookingStatus.completed;
-      default:
-        return null;
-    }
-  }
-
-  String _getStepActionText(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.driverAccepted:
-        return 'Mark As Arrived at Pickup Point';
-      case BookingStatus.driverArrived:
-        return 'Confirm Passenger Picked Up & Start Trip';
-      case BookingStatus.inProgress:
-        return 'Mark Trip Completed (Collect Cash)';
-      default:
-        return 'Update Trip Status';
-    }
-  }
-
-  IconData _getStepActionIcon(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.driverAccepted:
-        return Icons.pin_drop_outlined;
-      case BookingStatus.driverArrived:
-        return Icons.group_add_outlined;
-      case BookingStatus.inProgress:
-        return Icons.task_alt_outlined;
-      default:
-        return Icons.arrow_forward;
-    }
   }
 }

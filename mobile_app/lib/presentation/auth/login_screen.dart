@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
       SnackBar(
         content: Text('Selected demo profile: $roleName'),
         duration: const Duration(seconds: 1),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.brandBlack,
       ),
     );
   }
@@ -65,11 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final authService = context.watch<AuthService>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Form(
@@ -80,29 +80,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Brand Header
                     Center(
                       child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryTint,
+                        width: 64,
+                        height: 64,
+                        decoration: const BoxDecoration(
+                          color: AppColors.brandLime,
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.primary, width: 2),
                         ),
                         child: const Icon(
                           Icons.electric_rickshaw,
-                          size: 40,
-                          color: AppColors.primary,
+                          size: 34,
+                          color: AppColors.brandBlack,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     const Center(
                       child: Text(
                         'PothikSathi',
                         style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                          letterSpacing: 0.5,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.brandBlack,
+                          letterSpacing: -0.5,
                         ),
                       ),
                     ),
@@ -110,30 +109,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'পথিকসাথী • করিমপুর, নদিয়া',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Center(
-                      child: Text(
-                        'Lightweight Local Mobility & Bus Timetable',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textLight,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     // Quick Test Profiles (Convenient for evaluation)
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
+                        color: AppColors.surfaceSubtle,
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Column(
@@ -141,69 +130,39 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           const Row(
                             children: [
-                              Icon(Icons.flash_on, size: 16, color: AppColors.primary),
+                              Icon(Icons.bolt, size: 16, color: AppColors.brandBlack),
                               SizedBox(width: 6),
                               Text(
-                                'Quick Demo Profiles (One-Tap):',
+                                'Quick Demo Login:',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.brandBlack,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           Wrap(
                             spacing: 8,
-                            runSpacing: 6,
+                            runSpacing: 8,
                             children: [
-                              ActionChip(
-                                label: const Text('Passenger'),
-                                avatar: const Icon(Icons.person, size: 14),
-                                backgroundColor: AppColors.primaryTint,
-                                labelStyle: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                onPressed: () => _fillQuickProfile('9876543210', 'Passenger (Sourav)'),
-                              ),
-                              ActionChip(
-                                label: const Text('Approved TOTO Driver'),
-                                avatar: const Icon(Icons.electric_rickshaw, size: 14),
-                                backgroundColor: const Color(0xFFE8F5E9),
-                                labelStyle: const TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF1B5E20),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                onPressed: () => _fillQuickProfile('9800012345 (driver)', 'Approved Driver (Bapi)'),
-                              ),
-                              ActionChip(
-                                label: const Text('Pending Driver'),
-                                avatar: const Icon(Icons.hourglass_top, size: 14),
-                                backgroundColor: const Color(0xFFFFF3E0),
-                                labelStyle: const TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFFE65100),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                onPressed: () => _fillQuickProfile('9800099999 (pending)', 'Unapproved Driver (Ratan)'),
-                              ),
+                              _buildDemoChip('Passenger (Sourav)', () => _fillQuickProfile('9876543210', 'Passenger (Sourav)')),
+                              _buildDemoChip('Approved Driver (Bapi)', () => _fillQuickProfile('9800012345 (driver)', 'Approved Driver (Bapi)')),
+                              _buildDemoChip('Pending Driver', () => _fillQuickProfile('9800099999 (pending)', 'Unapproved Driver (Ratan)')),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
                     // Phone or Email Input
                     const Text(
                       'Mobile Number or Email',
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -213,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
                         hintText: 'e.g. 9876543210 or name@domain.com',
-                        prefixIcon: Icon(Icons.phone_android, color: AppColors.primary),
+                        prefixIcon: Icon(Icons.phone_android, size: 18, color: AppColors.textSecondary),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -226,10 +185,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     // Password Input
                     const Text(
-                      'Password / PIN',
+                      'Password (গোপন নম্বর)',
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -238,83 +197,88 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        hintText: 'Enter 6-digit PIN or password',
-                        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
+                        hintText: 'Enter password (demo: 123456)',
+                        prefixIcon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textSecondary),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            size: 18,
                             color: AppColors.textSecondary,
                           ),
                           onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
+                            setState(() => _obscurePassword = !_obscurePassword);
                           },
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.trim().length < 4) {
-                          return 'PIN/Password must be at least 4 characters';
+                        if (value == null || value.length < 6) {
+                          return 'Password must be at least 6 characters';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 24),
 
-                    // Login Action Button
+                    // Login Action Button (inDrive Lime Pill Button)
                     CustomButton(
                       text: 'Sign In (লগইন করুন)',
+                      isLime: true,
                       isLoading: authService.isLoading,
-                      icon: Icons.login,
                       onPressed: _handleLogin,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
 
-                    // Register Link
+                    // Register link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          "Don't have an account?",
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          "Don't have an account? ",
+                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                         ),
-                        TextButton(
-                          onPressed: () {
+                        GestureDetector(
+                          onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const RegisterScreen(),
-                              ),
+                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
                             );
                           },
                           child: const Text(
-                            'Register (নতুন অ্যাকাউন্ট)',
+                            'Register here',
                             style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
                               fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.brandBlack,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),
                       ],
-                    ),
-
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        'Karimpur Town • Pannadevi • Hospital • Bus Stand\nLow-data MVP • PothikSathi v1.0',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textLight.withOpacity(0.9),
-                        ),
-                      ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDemoChip(String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.brandBlack),
         ),
       ),
     );

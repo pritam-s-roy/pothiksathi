@@ -4,7 +4,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/booking_service.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/booking_model.dart';
-import '../../models/fare_model.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/status_badge.dart';
 
@@ -18,284 +17,258 @@ class PassengerTripStatusScreen extends StatelessWidget {
 
     if (booking == null) {
       return Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('Trip Status')),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.check_circle_outline, size: 64, color: AppColors.primary),
-              const SizedBox(height: 16),
-              const Text('No Active Trip', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text('You have no ongoing TOTO bookings right now.'),
-              const SizedBox(height: 20),
-              CustomButton(
-                text: 'Back to Home',
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSubtle,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_circle_outline, size: 36, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'No Active Trip',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'You currently have no ongoing TOTO bookings.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                CustomButton(
+                  text: 'Back to Home',
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(booking.id),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceSubtle,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                booking.id,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+              ),
+            ),
+          ],
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: StatusBadge(status: booking.status.toDbString(), label: booking.status.displayName),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Status Banner Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary, width: 1.5),
-              ),
-              child: Column(
-                children: [
-                  StatusBadge(status: booking.status.toDbString(), label: booking.status.displayName),
-                  const SizedBox(height: 12),
-                  Text(
-                    booking.status.displayName,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getStatusSubtitle(booking),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
+            // Status Hero Card
+            _buildStatusHeroCard(booking),
             const SizedBox(height: 16),
 
-            // Visual Milestone Step Bar
-            _buildMilestoneTracker(booking.status),
-            const SizedBox(height: 16),
-
-            // Driver Details Card (When assigned)
+            // Driver Card (when assigned)
             if (booking.driverName != null) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Assigned TOTO Driver (চালক বিবরণ)',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: AppColors.primaryTint,
-                            child: const Icon(Icons.electric_rickshaw, color: AppColors.primary, size: 28),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  booking.driverName!,
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  booking.vehicleNumber ?? 'Verified Karimpur TOTO',
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.phone, color: AppColors.primary),
-                            tooltip: 'Call Driver',
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Calling ${booking.driverPhone}...')),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildCaptainCard(context, booking),
               const SizedBox(height: 16),
             ],
 
-            // Trip Details Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Trip Specifications', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-                    const Divider(height: 18),
-                    _buildDetailRow('Pickup Location', booking.originName),
-                    _buildDetailRow('Drop Location', booking.destinationName),
-                    _buildDetailRow('Ride Category', booking.bookingType == BookingType.shared ? 'Shared TOTO (₹10/seat)' : 'Private Reserve'),
-                    _buildDetailRow('Passenger Count', '${booking.passengerCount} passenger(s)'),
-                    _buildDetailRow('Total Agreed Fare', Formatters.formatCurrency(booking.fare), isHighlighted: true),
-                    _buildDetailRow('Payment Mode', 'Cash after trip completion'),
-                  ],
+            // Route Details Card
+            _buildRouteDetailsCard(booking),
+            const SizedBox(height: 16),
+
+            // Fare Summary Card
+            _buildFareCard(booking),
+            const SizedBox(height: 24),
+
+            // Cancel Booking Button (if allowed by state machine)
+            if (booking.status.isPending || booking.status == BookingStatus.driverAssigned || booking.status == BookingStatus.driverAccepted)
+              OutlinedButton(
+                onPressed: () => _handleCancel(context, bookingService, booking.id),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.statusCancelled,
+                  side: const BorderSide(color: Color(0xFFFECACA)),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                ),
+                child: const Text(
+                  'Cancel Ride (যাত্রা বাতিল করুন)',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                 ),
               ),
-            ),
             const SizedBox(height: 20),
-
-            // Cancellation Action (If not completed or in progress)
-            if (booking.status == BookingStatus.pendingAssignment ||
-                booking.status == BookingStatus.driverAssigned ||
-                booking.status == BookingStatus.driverAccepted) ...[
-              OutlinedButton.icon(
-                icon: const Icon(Icons.cancel_outlined, color: AppColors.statusCancelled),
-                label: const Text('Cancel Booking Request', style: TextStyle(color: AppColors.statusCancelled)),
-                onPressed: () => _confirmCancellation(context, bookingService),
-              ),
-            ],
-
-            if (booking.status == BookingStatus.completed) ...[
-              CustomButton(
-                text: 'Done & Return to Home',
-                onPressed: () {
-                  bookingService.clearActiveBooking();
-                  Navigator.pop(context);
-                },
-              ),
-            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMilestoneTracker(BookingStatus currentStatus) {
-    final steps = [
-      {'title': 'Requested', 'status': BookingStatus.pendingAssignment},
-      {'title': 'Assigned', 'status': BookingStatus.driverAssigned},
-      {'title': 'Accepted', 'status': BookingStatus.driverAccepted},
-      {'title': 'Arrived', 'status': BookingStatus.driverArrived},
-      {'title': 'On Trip', 'status': BookingStatus.inProgress},
-      {'title': 'Done', 'status': BookingStatus.completed},
-    ];
+  Widget _buildStatusHeroCard(BookingModel booking) {
+    IconData heroIcon;
+    String title;
+    String subtitle;
+    bool isSearching = booking.status.isPending || booking.status == BookingStatus.driverAssigned;
 
-    int currentIndex = _getStatusIndex(currentStatus);
+    if (booking.status.isPending) {
+      heroIcon = Icons.radar;
+      title = 'Looking for Nearby Captains...';
+      subtitle = 'PothikSathi is matching your ride with online Karimpur TOTO drivers.';
+    } else if (booking.status == BookingStatus.driverAssigned) {
+      heroIcon = Icons.hourglass_top;
+      title = 'Captain Offer Pending';
+      subtitle = 'Offered to nearby captain with 30s acceptance window.';
+    } else if (booking.status == BookingStatus.driverAccepted) {
+      heroIcon = Icons.electric_rickshaw;
+      title = 'Captain is On the Way!';
+      subtitle = '${booking.driverName ?? "Captain"} accepted your ride and is heading to pickup.';
+    } else if (booking.status == BookingStatus.driverArrived) {
+      heroIcon = Icons.location_on;
+      title = 'Captain has Arrived';
+      subtitle = 'Your TOTO is waiting at ${booking.originName}. Please board.';
+    } else if (booking.status == BookingStatus.inProgress) {
+      heroIcon = Icons.directions;
+      title = 'Trip in Progress';
+      subtitle = 'Heading towards ${booking.destinationName}. Enjoy your journey!';
+    } else {
+      heroIcon = Icons.check_circle;
+      title = booking.status.displayName;
+      subtitle = 'Trip completed. Pay cash to driver.';
+    }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(steps.length, (index) {
-          final isPassed = index <= currentIndex;
-          final isCurrent = index == currentIndex;
-
-          return Column(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isPassed ? AppColors.primary : Colors.grey.shade300,
-                  border: isCurrent ? Border.all(color: AppColors.primaryLight, width: 2) : null,
-                ),
-                child: Center(
-                  child: isPassed
-                      ? const Icon(Icons.check, size: 13, color: Colors.white)
-                      : Text('${index + 1}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                steps[index]['title'] as String,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                  color: isCurrent ? AppColors.primary : AppColors.textSecondary,
-                ),
-              ),
-            ],
-          );
-        }),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: isSearching ? AppColors.brandLimeTint : AppColors.surfaceSubtle,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(heroIcon, size: 30, color: AppColors.brandBlack),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+          ),
+        ],
       ),
     );
   }
 
-  int _getStatusIndex(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pendingAssignment:
-        return 0;
-      case BookingStatus.driverAssigned:
-        return 1;
-      case BookingStatus.driverAccepted:
-        return 2;
-      case BookingStatus.driverArrived:
-        return 3;
-      case BookingStatus.inProgress:
-        return 4;
-      case BookingStatus.completed:
-        return 5;
-      default:
-        return 0;
-    }
-  }
-
-  String _getStatusSubtitle(BookingModel booking) {
-    switch (booking.status) {
-      case BookingStatus.pendingAssignment:
-        if (booking.autoDispatchExhausted) {
-          return '⚠️ Automatic matching busy. Switched to Karimpur Admin Desk manual dispatch.';
-        }
-        return '🤖 Auto-matching nearest eligible TOTO captain in Karimpur...';
-      case BookingStatus.driverAssigned:
-        return 'Offering trip to Captain ${booking.driverName ?? "assigned"} (${booking.remainingOfferSeconds}s timer)';
-      case BookingStatus.driverAccepted:
-        return 'Captain accepted and is traveling to your pickup point.';
-      case BookingStatus.driverArrived:
-        return 'Captain has arrived at your pickup location!';
-      case BookingStatus.inProgress:
-        return 'Trip underway. Please enjoy your ride.';
-      case BookingStatus.completed:
-        return 'You have arrived. Please hand cash fare directly to the captain.';
-      default:
-        return '';
-    }
-  }
-
-  Widget _buildDetailRow(String label, String value, {bool isHighlighted = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+  Widget _buildCaptainCard(BuildContext context, BookingModel booking) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
-              color: isHighlighted ? AppColors.primary : AppColors.textPrimary,
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: AppColors.brandBlack,
+            child: const Icon(Icons.electric_rickshaw, color: Colors.white, size: 26),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      booking.driverName ?? 'Captain',
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandLimeTint,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star, size: 10, color: AppColors.brandBlack),
+                          SizedBox(width: 2),
+                          Text('4.9', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  booking.vehicleNumber ?? 'Karimpur Verified TOTO',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          // Call Button
+          InkWell(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Calling Captain at ${booking.driverPhone ?? "..."}')),
+              );
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: AppColors.brandLime,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.phone, color: AppColors.brandBlack, size: 20),
             ),
           ),
         ],
@@ -303,21 +276,118 @@ class PassengerTripStatusScreen extends StatelessWidget {
     );
   }
 
-  void _confirmCancellation(BuildContext context, BookingService bookingService) {
+  Widget _buildRouteDetailsCard(BookingModel booking) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Route Details',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.brandLimeDark, shape: BoxShape.circle)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Pickup Point', style: TextStyle(fontSize: 10, color: AppColors.textLight)),
+                    Text(booking.originName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 3.5),
+            child: Container(width: 1, height: 16, color: AppColors.border),
+          ),
+          Row(
+            children: [
+              Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.brandBlack, shape: BoxShape.circle)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Destination', style: TextStyle(fontSize: 10, color: AppColors.textLight)),
+                    Text(booking.destinationName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFareCard(BookingModel booking) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Fare to Collect (নগদ ভাড়া)', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+              Text(
+                booking.bookingType.name == 'shared'
+                    ? 'Shared TOTO (${booking.passengerCount} seat)'
+                    : 'Private Reserve',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          Text(
+            Formatters.formatCurrency(booking.totalFare),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleCancel(BuildContext context, BookingService bookingService, String bookingId) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cancel Booking?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Cancel Ride?'),
         content: const Text('Are you sure you want to cancel this booking request?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('No, Keep Ride')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('No, Keep Ride'),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.statusCancelled),
-            onPressed: () {
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.statusCancelled,
+              minimumSize: const Size(100, 40),
+            ),
+            onPressed: () async {
               Navigator.pop(ctx);
-              bookingService.cancelBookingByPassenger('Passenger requested cancellation');
+              await bookingService.cancelBooking(bookingId, 'Cancelled by passenger');
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
-            child: const Text('Yes, Cancel'),
+            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
