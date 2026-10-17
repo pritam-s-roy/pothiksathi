@@ -1,4 +1,5 @@
 import 'fare_model.dart';
+export 'fare_model.dart';
 
 enum BookingStatus {
   pendingAssignment,

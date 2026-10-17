@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/services/booking_service.dart';
 import '../../core/utils/formatters.dart';
 import '../../models/booking_model.dart';
+import '../../models/fare_model.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/status_badge.dart';
 
