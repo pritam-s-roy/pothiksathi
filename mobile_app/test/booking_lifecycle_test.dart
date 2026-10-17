@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/domain/booking_state_machine.dart';
-import '../lib/models/booking_model.dart';
-import '../lib/models/user_model.dart';
+import 'package:pothiksathi/domain/booking_state_machine.dart';
+import 'package:pothiksathi/models/booking_model.dart';
+import 'package:pothiksathi/models/user_model.dart';
 
 void main() {
   group('Booking Lifecycle & State Machine Tests', () {

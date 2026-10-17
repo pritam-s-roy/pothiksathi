@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/models/user_model.dart';
-import '../lib/models/driver_profile_model.dart';
+import 'package:pothiksathi/models/user_model.dart';
+import 'package:pothiksathi/models/driver_profile_model.dart';
 
 void main() {
   group('Auth & Role Access Tests', () {

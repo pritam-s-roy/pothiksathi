@@ -17,8 +17,12 @@ Tests:
 """
 
 import sys
+import os
 import json
 from datetime import datetime
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 
 # Ensure UTF-8 output on Windows terminal
 if sys.platform == 'win32':
@@ -278,7 +282,8 @@ def test_timetable_search():
 # --- 6. FIRESTORE RULES SYNTAX & REPO COMPLETENESS ---
 def test_firestore_rules_and_schema():
     test("Firestore security rules file exists and contains all 8 collections (including systemConfig)")
-    with open(r"c:\Users\AACST\Downloads\pothiksathi\backend\firestore.rules", "r") as f:
+    rules_path = os.path.join(REPO_ROOT, "backend", "firestore.rules")
+    with open(rules_path, "r", encoding="utf-8") as f:
         content = f.read()
     
     required_collections = [
@@ -297,7 +302,8 @@ def test_firestore_rules_and_schema():
     ok()
 
     test("Seed data file exists and contains verified Karimpur hubs")
-    with open(r"c:\Users\AACST\Downloads\pothiksathi\backend\seed_data\karimpur_seed.json", "r") as f:
+    seed_path = os.path.join(REPO_ROOT, "backend", "seed_data", "karimpur_seed.json")
+    with open(seed_path, "r", encoding="utf-8") as f:
         seed = json.load(f)
     if "routes" not in seed or len(seed["routes"]) < 4:
         fail("Incomplete routes in seed")

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/models/bus_timetable_model.dart';
+import 'package:pothiksathi/models/bus_timetable_model.dart';
 
 void main() {
   group('Bus Timetable & Offline Cache Tests', () {

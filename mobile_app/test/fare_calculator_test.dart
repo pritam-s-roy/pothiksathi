@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/domain/fare_calculator.dart';
-import '../lib/models/fare_model.dart';
-import '../lib/models/route_model.dart';
+import 'package:pothiksathi/domain/fare_calculator.dart';
+import 'package:pothiksathi/models/fare_model.dart';
+import 'package:pothiksathi/models/route_model.dart';
 
 void main() {
   group('TOTO Fare Calculator & Tariff Engine Tests', () {

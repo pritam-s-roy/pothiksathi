@@ -12,7 +12,7 @@ import sys
 import json
 import re
 
-ROOT = r"c:\Users\AACST\Downloads\pothiksathi"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 errors = []
 
 def strip_comments_and_strings(code):
