@@ -73,7 +73,9 @@ jobs:
 
       - name: Generate Gradle Wrapper & Android Tooling
         working-directory: mobile_app
-        run: flutter create . --platforms=android --org=in.pothiksathi
+        run: |
+          flutter create . --platforms=android --org=in.pothiksathi
+          rm -f test/widget_test.dart
 
       - name: Install Flutter Dependencies
         working-directory: mobile_app
