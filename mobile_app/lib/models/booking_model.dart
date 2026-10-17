@@ -89,6 +89,8 @@ enum BookingStatus {
     }
   }
 
+  bool get isPending => this == BookingStatus.pendingAssignment;
+
   bool get isActive =>
       this == BookingStatus.pendingAssignment ||
       this == BookingStatus.driverAssigned ||
