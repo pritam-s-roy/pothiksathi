@@ -45,10 +45,19 @@ class BookingService extends ChangeNotifier {
   BookingModel? get activeBooking => _activeBooking;
   List<BookingModel> get history => List.unmodifiable(_history);
   bool get isSubmitting => _isSubmitting;
+  bool get isLoading => _isSubmitting;
   String? get errorMessage => _errorMessage;
   bool get hasActiveBooking => _activeBooking != null && _activeBooking!.status.isActive;
   String get dispatchMode => _dispatchMode;
   bool get isAutoDispatch => _dispatchMode == 'automatic';
+
+  // Action aliases for UI convenience
+  Future<bool> cancelBooking(String id, String reason) => cancelBookingByPassenger(reason);
+  Future<bool> acceptOffer(String bookingId, String driverId) => acceptDriverOffer(driverId);
+  Future<void> rejectOffer(String bookingId, String driverId, [String reason = 'Rejected by driver']) => rejectDriverOffer(driverId, reason);
+  Future<bool> markDriverArrived(String bookingId) => advanceDriverStatus(BookingStatus.driverArrived);
+  Future<bool> startTrip(String bookingId) => advanceDriverStatus(BookingStatus.inProgress);
+  Future<bool> completeTrip(String bookingId) => advanceDriverStatus(BookingStatus.completed);
 
   // Available online approved driver fleet in Karimpur
   final List<MockDriverCandidate> _driverFleet = [
