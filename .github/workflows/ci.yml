@@ -93,24 +93,22 @@ jobs:
       - name: Build Android Debug APK
         working-directory: mobile_app
         run: |
-          flutter build apk --debug -v > debug_build.log 2>&1 || {
-            echo "## ❌ Gradle Debug Build Failed" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 80 debug_build.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
+          if ! flutter build apk --debug -v > debug_build.log 2>&1; then
+            echo "::error title=Gradle Debug Error::$(tail -n 15 debug_build.log)"
+            echo "=== GRADLE DEBUG BUILD FAILED (LAST 80 LINES) ==="
+            tail -n 80 debug_build.log
             exit 1
-          }
+          fi
 
       - name: Build Android Release APK (ABI Split)
         working-directory: mobile_app
         run: |
-          flutter build apk --release --split-per-abi -v > release_build.log 2>&1 || {
-            echo "## ❌ Gradle Release Build Failed" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -n 80 release_build.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
+          if ! flutter build apk --release --split-per-abi -v > release_build.log 2>&1; then
+            echo "::error title=Gradle Release Error::$(tail -n 15 release_build.log)"
+            echo "=== GRADLE RELEASE BUILD FAILED (LAST 80 LINES) ==="
+            tail -n 80 release_build.log
             exit 1
-          }
+          fi
 
       - name: Upload Build Log on Failure
         if: failure()
